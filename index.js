@@ -147,6 +147,7 @@ app.get("/user", validateToken, async(req, res) =>{
 app.delete("/delete/user", validateToken, async(req, res) => {
     try {
         const user = req.user
+        await Users.deleteOne({email: user.email})
         return res.status(200).json({message: "User deleted successfully"})
 
     } catch (error) {
@@ -181,8 +182,39 @@ app.put("/update/user", validateToken, async(req, res) =>{
 app.put("/update/password", validateToken, async(req, res) =>{
     try {
         // update user password.
-        // Send code to user email to ensure it is the user trying to update their password.
-        // Hash the passowrd.
+
+        const user = req.user
+        const {newPassword, oldPassword} = req.body
+
+        if(!oldPassword){
+            return res.status(400).json({message: "Old password is required."})
+        }
+
+        const isMatched = bcrypt.compare(oldPassword, user.password)
+
+        if(!isMatched){
+            return res.status(400).json({message: "Incorrect old password"}) 
+        }
+
+        if(!newPassword){
+            return res.status(400).json({message: "Kindly enter a new password."})
+        }
+
+        if(newPassword.length < 8) {
+            return res.status(400).json({message: "New password length must be above 8"})
+        }
+
+        const hashedPassword = bcrypt.hash(newPassword, 12)
+
+        user.password = hashedPassword
+        updatedUser = await user.save()
+
+        return res.status(200).json({
+            message: "User password updated successfully",
+            user: updatedUser
+        })
+
+
     } catch (error) {
         return res.status(500).json({message: error.message})
     }

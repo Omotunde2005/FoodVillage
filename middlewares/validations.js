@@ -1,5 +1,4 @@
-// vALIDATE REGISTRATION
-
+// VALIDATE REGISTRATION
 const validateRegistration = async (req, res, next) => {
     const {email, password, username, role} = req.body
 
@@ -11,24 +10,14 @@ const validateRegistration = async (req, res, next) => {
         errors.push("User email is required")
     }
 
-    // Verify email here
-
     if(!password){
         errors.push("User password is required")
     }
 
-    if(password.length < 8) {
-        errors.push("Password length must be 8 letters or more")
-    }
 
     if(!username){
         errors.push("Username is required.")
     }
-
-    if(username < 6){
-        errors.push("Username lenght should be 6 letters or more")
-    }
-
 
 
     if(!role){
@@ -36,7 +25,7 @@ const validateRegistration = async (req, res, next) => {
     }
 
 
-    if(!role in roles){
+    if(!roles.includes(role)){
         errors.push("User roles supported include: customer, restaurantOwner, delivery")
     }
 
@@ -52,24 +41,18 @@ const validateRegistration = async (req, res, next) => {
 }
 
 
+// VALIDATE REGISTRATION
 
 const validateLogin = async(req, res, next) => {
     const {email, password} = req.body
+    const errors = []
 
     if(!password){
         errors.push("User password is required")
     }
 
-    if(password.length < 8) {
-        errors.push("Password length must be 8 letters or more")
-    }
-
-    if(!username){
+    if(!email){
         errors.push("Username is required.")
-    }
-
-    if(username < 6){
-        errors.push("Username lenght should be 6 letters or more")
     }
 
     if(errors.length > 0){
@@ -82,6 +65,7 @@ const validateLogin = async(req, res, next) => {
 }
 
 
+// VALIDATE CREATE RESTAURANT
 const validateRestaurant = async(req, res, next) => {
     const {name, location, contact, menu} = req.body
 
@@ -112,6 +96,7 @@ const validateRestaurant = async(req, res, next) => {
 }
 
 
+// VALIDATE CREATE MENU
 const validateMenu = async(req, res, next) =>{
     const {name, description, price, availability} = req.body
 
@@ -141,6 +126,7 @@ const validateMenu = async(req, res, next) =>{
 }
 
 
+// VALIDATE CREATE ORDERS
 const validateOrders = async(req, res, next) => {
     const {userId, restaurantId, menuId, cost} = req.body
 
@@ -171,10 +157,39 @@ const validateOrders = async(req, res, next) => {
 }
 
 
+const validateDelivery = async(req, res, next) => {
+    const {riderName, contact, vehicleDetails, status} = req.body
+
+    if (!riderName){
+        errors.push("Rider name is required")
+    }
+
+    if (!contact){
+        errors.push("Contact details is required")
+    }
+
+    if (!vehicleDetails){
+        errors.push("Vehicle details is required")
+    }
+
+    if (!status){
+        errors.push("Delivery status is required")
+    }
+
+    if(errors.length > 0){
+        return res.status(400).json(
+            {message: errors}
+        )
+    }
+
+    next()
+}
+
 module.exports = {
     validateMenu,
     validateRegistration,
     validateRestaurant,
     validateOrders, 
-    validateLogin
+    validateLogin,
+    validateDelivery
 }

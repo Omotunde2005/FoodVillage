@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken")
-const Users = require("../models")
+const Users = require("../models/userModel")
 
 
 
@@ -14,7 +14,7 @@ const validateToken = async(req, res, next) => {
         const headerArray = header.split(" ")
         const token = headerArray[1]
 
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN)
+        const decoded = await jwt.verify(token, process.env.ACCESS_TOKEN)
 
         if(!decoded){
             return res.status(401).json({message: "Invalid Login details"})

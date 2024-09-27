@@ -11,7 +11,7 @@ const validateToken = async(req, res, next) => {
             res.status(401).json({message: "Access Denied!"})
         }
 
-        const headerArray = header.split(" ")
+        const headerArray = await header.split(" ")
         const token = headerArray[1]
 
         const decoded = await jwt.verify(token, process.env.ACCESS_TOKEN)

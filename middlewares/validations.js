@@ -4,7 +4,7 @@ const validateRegistration = async (req, res, next) => {
 
 
     const errors = []
-    const roles = ["customer", "restaurantOwner", "delivery"]
+    const roles = ["customer", "restaurantOwner", "rider"]
 
     if(!email){
         errors.push("User email is required")
@@ -26,7 +26,7 @@ const validateRegistration = async (req, res, next) => {
 
 
     if(!roles.includes(role)){
-        errors.push("User roles supported include: customer, restaurantOwner, delivery")
+        errors.push("User roles supported include: customer, restaurantOwner, rider")
     }
 
 
@@ -67,7 +67,9 @@ const validateLogin = async(req, res, next) => {
 
 // VALIDATE CREATE RESTAURANT
 const validateRestaurant = async(req, res, next) => {
-    const {name, location, contact, menu} = req.body
+    const {name, location, contact} = req.body
+
+    const errors = []
 
     if(!name){
         errors.push("Restaurant name is required")
@@ -78,11 +80,7 @@ const validateRestaurant = async(req, res, next) => {
     }
 
     if(!contact){
-        errors.push("Restaurant contact is required")
-    }
-
-    if(!menu){
-        errors.push("Restaurant menu is required")
+        errors.push("Restaurant contact details is required")
     }
 
     if(errors.length > 0){
@@ -99,6 +97,7 @@ const validateRestaurant = async(req, res, next) => {
 // VALIDATE CREATE MENU
 const validateMenu = async(req, res, next) =>{
     const {name, description, price, availability} = req.body
+    const errors = []
 
     if(!name){
         errors.push("Menu name is required")
@@ -128,12 +127,9 @@ const validateMenu = async(req, res, next) =>{
 
 // VALIDATE CREATE ORDERS
 const validateOrders = async(req, res, next) => {
-    const {userId, restaurantId, menuId, cost} = req.body
+    const {restaurantId, menuId, cost, userLocation} = req.body
 
-    if(!userId){
-        errors.push("Each order requires a userId")
-    }
-
+    const errors = []
     if(!restaurantId){
         errors.push("Each order requires a restaurantId")
     }
@@ -144,6 +140,10 @@ const validateOrders = async(req, res, next) => {
 
     if(!cost){
         errors.push("Kindly include the oder cost")
+    }
+
+    if(!userLocation){
+        errors.push("User location is required")
     }
 
     if(errors.length > 0){
@@ -157,13 +157,10 @@ const validateOrders = async(req, res, next) => {
 }
 
 
-const validateDelivery = async(req, res, next) => {
-    const {riderName, contact, vehicleDetails, status} = req.body
+const validateRider = async(req, res, next) => {
+    const {contact, vehicleDetails, status, currentLocation} = req.body
 
-    if (!riderName){
-        errors.push("Rider name is required")
-    }
-
+    const errors = []
     if (!contact){
         errors.push("Contact details is required")
     }
@@ -173,7 +170,12 @@ const validateDelivery = async(req, res, next) => {
     }
 
     if (!status){
-        errors.push("Delivery status is required")
+        errors.push("Rider availability status is required")
+    }
+
+    // This information is useful when connecting riders to orders close to them.
+    if (!currentLocation){
+        errors.push("Your current location is required.")
     }
 
     if(errors.length > 0){
@@ -191,5 +193,5 @@ module.exports = {
     validateRestaurant,
     validateOrders, 
     validateLogin,
-    validateDelivery
+    validateRider
 }

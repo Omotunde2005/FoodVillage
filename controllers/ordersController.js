@@ -1,13 +1,68 @@
 const Orders = require("../models/ordersModel")
+const Rider = require("../models/riderModel")
+const User = require("../models/userModel")
+const Restaurants = require("../models/restaurantModel")
+const Menu = require("../models/menuModel")
+const {newOrderMail} = require("../mails/orderMails")
+const newDeliveryMail = require("../mails/riderMails")
 
 
 const createOrder = async(req, res) => {
     try {
-        const {userId, restaurantId, menuId, cost, status} = req.body
+        const user = req.user
+        const userId = user._id
+        if(user.role != "customer"){
+            return res.status(401).json({message: "Unauthorized. User must be a customer"})
+        }
 
-        // create a new order for user
-        // requires auth
-        // check if the order does not exist before
+        const {restaurantId, menuId, cost, userLocation} = req.body
+
+        const availableRiders = await Rider.find({currentLocation: userLocation, status: "available"}).all()
+
+        if(availableRiders.length == 0){
+            return res.status(200).json({message: "Sorry, there are currently no available riders around your vicinity"})
+        }
+        
+        // the rider to deliver the item
+        const riderToUse = availableRiders[0]
+
+        // The rider profile ID
+        const riderId = riderToUse._id
+
+        // The rider User Profile ID
+        const riderUserId = riderToUse.userId
+
+        // The rider User Profile
+        const riderUserProfile = await User.findById({riderUserId})
+        
+        // Restaurant to get the order from
+        const restaurant = await Restaurants.findById({restaurantId})
+        
+        // The new order object
+        const newOrder = await new Orders({
+            restaurantId,
+            menuId,
+            totalCost: cost,
+            userId,
+            riderId,
+            destination: userLocation
+        })
+
+        // Menu item to be delivered
+        const menu = await Menu.findById({menuId})
+        
+        // Send a mail to user about the new order
+        await newOrderMail(user.email, user.username, menu.description, restaurant.name, riderToUse.contact)
+        
+        // Send a mail to notify rider of a new order.
+        await newDeliveryMail(riderUserProfile.email, userLocation, restaurant.name, menu.description)
+
+        return res.status(200).json({
+            message: "Successful",
+            order: newOrder
+        })
+
+
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
@@ -15,10 +70,24 @@ const createOrder = async(req, res) => {
 
 const getUserOrderById = async(req, res) => {
     try {
-        const {Id} = req.params
-        // GET orders by ID
-        // requires auth
-        // Only For authenticating user.
+        const user = req.user
+        const {id} = req.params
+        
+        if(user.role != "customer"){
+            return res.status(401).json({message: "Unauthorized. User role must be customer"})
+        }
+
+        const order = await Orders.findById({id})
+
+        if(user._id != order.userId){
+            return res.status(401).json({message: "User not authorized to access this item"})
+        }
+
+        return res.status(200).json({
+            message: "Successful",
+            order: order
+        })
+
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
@@ -26,8 +95,18 @@ const getUserOrderById = async(req, res) => {
 
 const getUserOrders = async(req, res) => {
     try {
-        // return all orders for the authenticating user
-        // requires auth
+        const user = req.user
+        const userId = user._id
+        if(user.role != "customer"){
+            return res.status(401).json({message: "Unauthorized. User role must be customer"})
+        }
+
+        const userOrders = await Orders.find({userId: userId}).all()
+        return res.status(200).json({
+            message: "Successful",
+            orders: userOrders
+        })
+
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
@@ -36,11 +115,24 @@ const getUserOrders = async(req, res) => {
 
 const getRestaurantOrderById = async(req, res) => {
     try {
-        const {Id} = req.params
-        // GET orders by ID
-        // requires auth
-        // Only For authenticating user.
-        // must be the owner of a restaurant.
+        const user = req.user
+        const {id} = req.params
+        
+        if(user.role != "restaurantOwner"){
+            return res.status(401).json({message: "Unauthorized. User role must be restaurant owner."})
+        }
+
+        const order = await Orders.findById({id})
+
+        if(user._id != order.userId){
+            return res.status(401).json({message: "User not authorized to access this item"})
+        }
+
+        return res.status(200).json({
+            message: "Successful",
+            order: order
+        })
+
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
@@ -50,9 +142,23 @@ const getRestaurantOrderById = async(req, res) => {
 
 const getRestaurantOrders = async(req, res) => {
     try {
-        // return all orders to restaurant
-        // requires auth
-        // must have a owner role
+        const user = req.user
+        const userId = user._id
+        
+        if(user.role != "restaurantOwner"){
+            return res.status(401).json({message: "Unauthorized. User role must be restaurantOwner"})
+        }
+
+        const restaurant = await Restaurants.findOne({userId: userId})
+        const restaurantId = restaurant._id
+
+        const restaurantOrders = await Orders.find({restaurantId: restaurantId}).all()
+        return res.status(200).json({
+            message: "Successful",
+            orders: restaurantOrders
+        })
+
+
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
@@ -61,26 +167,57 @@ const getRestaurantOrders = async(req, res) => {
 
 const deleteOrderById = async(req, res) => {
     try {
-        const {Id} = req.params
-        // delete an order
-        // requires auth
-        // only the user that initiated order can delete order.
+        const user = req.user
+        const {id} = req.params
+        
+        if(user.role != "customer"){
+            return res.status(401).json({message: "Unauthorized. User role must be customer"})
+        }
+
+        const order = await Orders.findById({id})
+
+        if(user._id != order.userId){
+            return res.status(401).json({message: "User not authorized to access this item"})
+        }
+
+        await Orders.deleteOne({_id: id})
+
+        return res.status(200).json({message: "Order deleted successfully"})
+
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
 }
 
-
-const updateOrderById = async(req, res) => {
+// An endpoint for user to confirm that they have received the order.
+const orderDelivererd = async(req, res) => {
     try {
-        const{id} = req.params
-        // update order status
-        // requires auth
-        // only user that initiated it can update order status.
+        const user = req.user
+        const {id} = req.params
+        
+        if(user.role != "customer"){
+            return res.status(401).json({message: "Unauthorized. User role must be customer"})
+        }
+
+        const order = await Orders.findById({id})
+
+        if(user._id != order.userId){
+            return res.status(401).json({message: "User not authorized to access this item"})
+        }
+
+        order.isdelivered = true
+
+        await order.save()
+        return res.status(200).json({
+            message: "Confirmation received"
+        })
+
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
 }
+
+
 
 module.exports = {
     createOrder,
@@ -88,6 +225,6 @@ module.exports = {
     getUserOrderById,
     getRestaurantOrders,
     getRestaurantOrderById,
-    updateOrderById,
-    deleteOrderById
+    deleteOrderById,
+    orderDelivererd
 }

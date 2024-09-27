@@ -1,10 +1,10 @@
 const Restaurants = require("../models/restaurantModel")
 const Orders = require("../models/ordersModel")
-const Delivery = require("../models/deliveryModel") 
+const Rider = require("../models/riderModel") 
 const Menu = require("../models/menuModel")
 
 
-const restaurantQuery = async(req, res) => {
+const restaurantQuery = async(req, res, next) => {
     const {id} = req.params
       
     if(!id){
@@ -16,9 +16,11 @@ const restaurantQuery = async(req, res) => {
     if(!restaurantExists){
         return res.status(404).json({message: "Restaurant not found"})
     }
+
+    next()
 }
 
-const orderQuery = async(req, res) => {
+const orderQuery = async(req, res, next) => {
     const {id} = req.params
       
     if(!id){
@@ -30,25 +32,29 @@ const orderQuery = async(req, res) => {
     if(!orderExists){
         return res.status(404).json({message: "Order not found"}) 
     }
+
+    next()
 }
 
 
-const deliveryQuery = async(req, res) => {
+const riderQuery = async(req, res, next) => {
     const {id} = req.params
 
     if(!id){
         return res.status(400).json({message: "Id not in the URL"})
     }
 
-    const deliveryExists = await Delivery.findById({id})
+    const riderExists = await Rider.findById({id})
 
-    if(!deliveryExists){
-        return res.status(404).json({message: "Delivery not found"}) 
+    if(!riderExists){
+        return res.status(404).json({message: "Rider not found"}) 
     }
+
+    next()
 }
 
 
-const menuQuery = async(req, res) => {
+const menuQuery = async(req, res, next) => {
     const {id} = req.params
 
     if(!id){
@@ -60,12 +66,14 @@ const menuQuery = async(req, res) => {
     if(!menuExists){
         return res.status(404).json({message: "Menu not found"})  
     }
+
+    next()
 }
 
 
 module.exports = {
     restaurantQuery,
     orderQuery,
-    deliveryQuery,
+    riderQuery,
     menuQuery
 }

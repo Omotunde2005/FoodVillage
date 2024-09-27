@@ -10,10 +10,10 @@ const createRestaurant = async(req, res) => {
         const menuIdArray = []
 
         if(user.role != "restaurantOwner"){
-            return res.status(400).json({message: "User role must be owner"})
+            return res.status(400).json({message: "User must be a restaurant owner"})
         }
 
-        const restaurantExists = await Restaurants.findOne({"userId": userId})
+        const restaurantExists = await Restaurants.findOne({userId})
 
         if(restaurantExists){
             return res.status(400).json({message: "User already has a restaurant"})
@@ -42,12 +42,7 @@ const createRestaurant = async(req, res) => {
 // Does not require authentication so users can browse the available restaurants before they sign up
 const getAllRestaurants = async(req, res) => {
     try {
-        const restaurants = await Restaurants.findall()
-        const user = req.user
-
-        if(user.role != "restaurantOwner"){
-            return res.status(400).json({message: "User role must be restaurantOwner"})
-        }
+        const restaurants = await Restaurants.find().all()
 
         return res.status(200).json({
             message: "Successful",
@@ -78,6 +73,7 @@ const getRestaurantById = async(req, res) =>{
 }
 
 
+// Only restaurant owners can delete a restaurant
 const deleteRestaurantById = async(req, res) => {
     try {
         const {id} = req.params
@@ -86,10 +82,10 @@ const deleteRestaurantById = async(req, res) => {
         const restaurant = await Restaurants.findById({id})
 
         if(user._id != restaurant.userId){
-            return res.status(400).json({message: "User is not authorized to perform this action."})
+            return res.status(401).json({message: "User is not authorized to perform this action."})
         }
 
-        await Restaurants.deleteOne({id: id})
+        await Restaurants.deleteOne({"_id": id})
 
         return res.status(200).json({message: "Restaurant deleted successfully"})
 
@@ -106,7 +102,7 @@ const updateRestaurantById = async(req, res) => {
         const restaurant = await Restaurants.findById({id})
 
         if(user._id != restaurant.userId){
-            return res.status(400).json({message: "User is not authorized to perform this action."})
+            return res.status(401).json({message: "User is not authorized to perform this action."})
         }
 
         restaurant.name = req.body.name || restaurant.name 

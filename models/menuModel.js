@@ -7,7 +7,7 @@ const menuSchema = new mongoose.Schema(
         description: {type: String, required: true},
         price: {type: Number, required: true},
         availability: {type: Boolean, required: true},
-        restaurantId: {type: Number, required: true}
+        restaurantId: {type: String, required: true}
     }
 )
 

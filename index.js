@@ -7,7 +7,7 @@ const router = require("./routes/usersRoute")
 const restaurantRouter = require("./routes/restaurantRoute")
 const ordersRouter = require("./routes/ordersRoute")
 const menuRouter = require("./routes/menuRoute")
-const deliveryRouter = require("./routes/deliveryRoute")
+const riderRouter = require("./routes/riderRoute")
 
 
 dotenv.config()
@@ -38,7 +38,7 @@ app.get("/", (req, res) => {
 
 
 app.use("/api", router)
-app.use("/api", deliveryRouter)
+app.use("/api", riderRouter)
 app.use("/api", menuRouter)
 app.use("/api", restaurantRouter)
 app.use("/api", ordersRouter)

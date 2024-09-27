@@ -2,11 +2,13 @@ const mongoose = require("mongoose")
 
 const orderSchema = new mongoose.Schema(
     {
-        userId: {type: Number, required: true},
-        restaurantId: {type: Number, required: true},
-        menuId: {type: Number, required: true},
+        userId: {type: String, required: true},
+        restaurantId: {type: String, required: true},
+        menuId: {type: String, required: true},
         totalCost: {type: Number, required: true},
-        status: {type: String, required: true, default: false}
+        isdelivered: {type: Boolean, required: true, default: false},
+        riderId: {type: String},
+        destination: {type: String}
     }
 )
 

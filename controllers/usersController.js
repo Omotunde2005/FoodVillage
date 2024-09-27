@@ -2,8 +2,10 @@ const Users = require("../models/userModel")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
 const validateEmail = require("../mails/validatemails")
-// const sendEmail = require("../mails/sendEmail")
+const sendEmail = require("../mails/welcomeMail")
+const resetPasswordMail = require("../mails/newPasswordMail")
 const dotenv = require("dotenv")
+const newPassword = require("../functions")
 dotenv.config()
 
 
@@ -46,6 +48,9 @@ const registerUser = async (req, res) => {
 
         await newUser.save()
 
+        // Send mail to user
+
+        await sendEmail(email, username)
         return res.status(200).json(
             {
                 message: "Successful",
@@ -56,22 +61,6 @@ const registerUser = async (req, res) => {
                 }
             }
         )
-
-        // Send a welcome email to the user.
-        //const mailSent = await sendEmail(email, username)
-
-        // Verify if mail was actually sent.
-        // if(mailSent){
-        //     return res.status(200).json(
-        //         {
-        //             message: "Successful",
-        //             user: newUser
-        //         }
-        //     )
-        // }
-
-        // return res.status(500).json({message: "A server error occured while trying to send mail. Please retry later"})
-
 
 
     } catch (error) {
@@ -84,20 +73,21 @@ const registerUser = async (req, res) => {
 }
 
 
+const deleteUsers = async(req, res) => {
+    await Users.deleteMany({})
+
+    return res.status(200).json({message: "Users deleted successfully"})
+}
 
 const userLogin = async(req, res) => {
     try {
 
         const {email, password} = req.body
-        
-        if(password.length <= 8) {
-            return res.status(400).json({message: "Password must be more 8 characters"})
-        }
 
         const user = await Users.findOne({email})
 
         if(!user){
-            res.status(404).json({message: "This user does not exist in the database"})
+            res.status(404).json({message: "User not found"})
         }
 
         const isMatched = await bcrypt.compare(password, user.password)
@@ -106,7 +96,7 @@ const userLogin = async(req, res) => {
             res.status(400).json({message: "Incorrect password or Email!"}) 
         }
 
-        const accessToken = await jwt.sign({user}, `${process.env.ACCESS_TOKEN}`, {expiresIn: "45m"})
+        const accessToken = await jwt.sign({user}, `${process.env.ACCESS_TOKEN}`, {expiresIn: "2 days"})
 
         return res.status(200).json({
             message: "Login successful",
@@ -129,7 +119,6 @@ const getUser = async(req, res) =>{
     
     try {
         const user = await req.user
-        const {email} = req.body
         return res.status(200).json({
             message: "Successful",
             user: {
@@ -197,18 +186,18 @@ const updateUserPassword = async(req, res) =>{
             return res.status(400).json({message: "Old password is required."})
         }
 
-        const isMatched = bcrypt.compare(oldPassword, user.password)
-
-        if(!isMatched){
-            return res.status(400).json({message: "Incorrect old password"}) 
-        }
-
         if(!newPassword){
             return res.status(400).json({message: "Kindly enter a new password."})
         }
 
+        const isMatched = await bcrypt.compare(oldPassword, user.password)
+
+        if(!isMatched){
+            return res.status(400).json({message: "Old password is incorrect"}) 
+        }
+
         if(newPassword.length <= 8) {
-            return res.status(400).json({message: "New password length must be above 8"})
+            return res.status(400).json({message: "Password length must be above 8 characters"})
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 12)
@@ -232,11 +221,46 @@ const updateUserPassword = async(req, res) =>{
 }
 
 
+const forgottenPassword = async(req, res) =>{
+
+    try {
+        const {email} = req.body
+
+        if(!email){
+            return res.status(400).json({message: "User email is required"})
+        }
+        
+        const user = await Users.findOne({email})
+
+        if(!user){
+            return res.status(404).json({message: "User cannot be found"})
+        }
+    
+        const password = await newPassword()
+        await console.log(password)
+        const hashedPassword = await bcrypt.hash(password, 12) 
+        
+        user.password = hashedPassword
+        await user.save()
+        
+        // send an email of the new password to the user.
+        await resetPasswordMail(email, password)
+
+        return res.status(200).json({message: "A new recovery password has been sent to user email."})
+    
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
+
+}
+
 module.exports = {
     registerUser,
     userLogin,
     getUser,
     deleteUser,
     updateUserData,
-    updateUserPassword
+    updateUserPassword,
+    forgottenPassword,
+    deleteUsers
 }

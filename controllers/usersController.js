@@ -1,7 +1,7 @@
 const Users = require("../models/userModel")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
-const validateEmail = require("../mails/validatemails")
+const {validEmail} = require("../middlewares/validations")
 const sendEmail = require("../mails/welcomeMail")
 const resetPasswordMail = require("../mails/newPasswordMail")
 const dotenv = require("dotenv")
@@ -15,7 +15,7 @@ const registerUser = async (req, res) => {
          
         const {email, password, username, role} = req.body
 
-        if(!validateEmail(email)){
+        if(!validEmail(email)){
             return res.status(400).json({message: "Invalid email format"})
         }
 
@@ -70,13 +70,6 @@ const registerUser = async (req, res) => {
     }
 
     
-}
-
-
-const deleteUsers = async(req, res) => {
-    await Users.deleteMany({})
-
-    return res.status(200).json({message: "Users deleted successfully"})
 }
 
 const userLogin = async(req, res) => {
@@ -174,7 +167,7 @@ const updateUserData = async(req, res) =>{
 }
 
 
-
+// Change user password
 const updateUserPassword = async(req, res) =>{
     try {
         // update user password.
@@ -221,6 +214,7 @@ const updateUserPassword = async(req, res) =>{
 }
 
 
+// Create new password and send to mail
 const forgottenPassword = async(req, res) =>{
 
     try {
@@ -261,6 +255,5 @@ module.exports = {
     deleteUser,
     updateUserData,
     updateUserPassword,
-    forgottenPassword,
-    deleteUsers
+    forgottenPassword
 }

@@ -156,7 +156,7 @@ const validateOrders = async(req, res, next) => {
 
 }
 
-
+// Validate Rider registration
 const validateRider = async(req, res, next) => {
     const {contact, vehicleDetails, status, currentLocation} = req.body
 
@@ -187,11 +187,19 @@ const validateRider = async(req, res, next) => {
     next()
 }
 
+// Validate email
+const validEmail = (email) => {
+	const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	return re.test(String(email).toLowerCase());
+};
+
+
 module.exports = {
     validateMenu,
     validateRegistration,
     validateRestaurant,
     validateOrders, 
     validateLogin,
-    validateRider
+    validateRider,
+    validEmail
 }

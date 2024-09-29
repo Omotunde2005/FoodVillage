@@ -17,6 +17,14 @@ const createRider = async(req, res) => {
         if(riderExists){
             return res.status(400).json({message: "Rider already exists"})
         }
+
+        const vehicleRegistered = await Rider.findOne({vehicleDetails: vehicleDetails})
+
+        
+        if(vehicleRegistered){
+            return res.status(400).json({message: "Vehicle already registered"})
+        }
+
         
         const newRider = await new Rider({
             contact,

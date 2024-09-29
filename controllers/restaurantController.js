@@ -19,6 +19,12 @@ const createRestaurant = async(req, res) => {
             return res.status(400).json({message: "User already has a restaurant"})
         }
 
+        const restaurantNameExists = await Restaurants.findOne({name: name})
+
+        if(restaurantNameExists){
+            return res.status(400).json({message: `Restaurant with the name "${name}" already exists. Kindly select a new name.`})
+        }
+
         const newRestaurant = await new Restaurants({
             name,
             location,

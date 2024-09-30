@@ -4,7 +4,7 @@ const User = require("../models/userModel")
 const Restaurants = require("../models/restaurantModel")
 const Menu = require("../models/menuModel")
 const {newOrderMail} = require("../mails/orderMails")
-const newDeliveryMail = require("../mails/riderMails")
+const {newDeliveryMail, orderCancelledMail} = require("../mails/riderMails")
 
 
 const createOrder = async(req, res) => {
@@ -56,6 +56,10 @@ const createOrder = async(req, res) => {
         
         // Send a mail to notify rider of a new order.
         await newDeliveryMail(riderUserProfile.email, userLocation, restaurant.name, menu.description)
+        riderToUse.status = "unavailable"
+        
+        // make unavailable after been matched to an order.
+        await riderToUse.save()
 
         return res.status(200).json({
             message: "Successful",
@@ -175,14 +179,27 @@ const deleteOrderById = async(req, res) => {
         }
 
         const order = await Orders.findById({id})
+        const riderId = order.riderId
+        const orderMenuId = order.menuId
+        const rider = await Rider.findById({riderId})
+        
 
+        const menuItem = await Menu.findById({orderMenuId})
+        // The rider User Profile ID
+        const riderUserId = rider.userId
+
+        // The rider User Profile
+        const riderUserProfile = await User.findById({riderUserId})
+
+        await orderCancelledMail(riderUserProfile.email, menuItem.name)
+ 
         if(user._id != order.userId){
             return res.status(401).json({message: "User not authorized to access this item"})
         }
 
         await Orders.deleteOne({_id: id})
 
-        return res.status(200).json({message: "Order deleted successfully"})
+        return res.status(200).json({message: "Order cancelled successfully"})
 
     } catch (error) {
         return res.status(500).json({message: error.message})

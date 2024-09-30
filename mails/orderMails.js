@@ -37,6 +37,7 @@ const newOrderMail = async(email, username, menuDescription, restaurantName, rid
     }
 }
 
+
 module.exports = {
     newOrderMail
 }

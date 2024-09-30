@@ -35,5 +35,42 @@ const newDeliveryMail = async(email, location, restaurantName, menuDescription) 
     }
 }
 
+const orderCancelledMail = async(email, menuName) => {
+    try {
+        const Transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: `${process.env.MY_EMAIL}`,
+                pass: `${process.env.EMAIL_PASSWORD}`
+            }
+        })
 
-module.exports = newDeliveryMail
+        const emailBody = {
+            from: process.env.MY_EMAIL,
+            to: email,
+            subject: "ORDER CANCELLED",
+            html: `
+                <div>
+                    <p>
+                    The order for ${menuName} has been cancelled by user. 
+                    </p>
+
+                </div>
+            `
+        }
+
+        const result = await Transporter.sendMail(emailBody)
+
+        return true
+
+    } catch (error) {
+        console.log(error.essage)
+        return false
+    }
+}
+
+
+module.exports = {
+    newDeliveryMail,
+    orderCancelledMail
+}

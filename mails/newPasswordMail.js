@@ -26,11 +26,8 @@ const resetPasswordMail = async(email, password) => {
 
         const result = await Transporter.sendMail(emailBody)
 
-        return true
-
     } catch (error) {
-        console.log(error.essage)
-        return false
+        console.log(error.message)
     }
 }
 

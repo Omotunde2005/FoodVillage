@@ -27,11 +27,9 @@ const newDeliveryMail = async(email, location, restaurantName, menuDescription) 
 
         const result = await Transporter.sendMail(emailBody)
 
-        return true
 
     } catch (error) {
-        console.log(error.essage)
-        return false
+        console.log(error.message)
     }
 }
 
@@ -61,11 +59,8 @@ const orderCancelledMail = async(email, menuName) => {
 
         const result = await Transporter.sendMail(emailBody)
 
-        return true
-
     } catch (error) {
-        console.log(error.essage)
-        return false
+        console.log(error.message)
     }
 }
 

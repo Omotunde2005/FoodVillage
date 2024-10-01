@@ -73,16 +73,6 @@ const registerUser = async (req, res) => {
 }
 
 
-const mailRoute = async(req, res) => {
-    try{
-        await sendEmail("omobolanleedun@gmail.com", "Emiloju")
-
-        return res.status(200).json({message: "Email sent"})
-    } catch(error){
-        return res.status(400).json({message: error.message})
-    }
-}
-
 const userLogin = async(req, res) => {
     try {
 
@@ -266,6 +256,5 @@ module.exports = {
     deleteUser,
     updateUserData,
     updateUserPassword,
-    forgottenPassword, 
-    mailRoute
+    forgottenPassword
 }
